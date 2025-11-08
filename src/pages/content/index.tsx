@@ -1,9 +1,26 @@
 import { createRoot } from 'react-dom/client';
 import './style.css' 
 import { isSharehubFloorsheetPage } from '@src/utils/content-script-utils';
-import { ActionButton } from '@src/components/sharehub/ActionButton';
 import { GetData } from '@src/components/GetData';
 
+let buttonInjected = false;
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('Content script received message:', message);
+    if (message.type === 'BACKGROUND_TO_CONTENT_SCRIPT' && message.payload.action === 'DOWNLOAD_CSV') {
+        const {csvContent, date} = message.payload.data;
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `extracted_data_${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    }
+})
 
 const handleDOMLoaded = async () => {
   console.log("Extension: ", document.location.href)
@@ -21,7 +38,7 @@ const handleDOMLoaded = async () => {
   targetElem.appendChild(renderRoot)
   console.log("Extension passed ", 5)
   createRoot(renderRoot).render(<GetData />)
-
+  buttonInjected = true;
 }
 
 if (document.readyState === "loading") {
@@ -31,3 +48,30 @@ if (document.readyState === "loading") {
   // `DOMContentLoaded` has already fired
   handleDOMLoaded();
 }
+
+setInterval(() => {
+  if (buttonInjected) return
+  console.log("Checking to inject button...")
+  handleDOMLoaded();
+}, 2000);
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('Content script received message:', message);
+  // Handle messages from background script if needed
+  if (message.type === "BACKGROUND_TO_CONTENT_SCRIPT") {
+    // Handle the message accordingly
+    if (message.payload.action === "DOWNLOAD_CSV") {
+      const { csvContent, date } = message.payload.data;
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `extracted_data_${date}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  }
+});

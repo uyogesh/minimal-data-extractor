@@ -30,8 +30,8 @@ export const GetData = () => {
             payload: {
                 action: "START_DATA_EXTRACTION",
                 data: {
-                    date: dateElem,
-                    numPages
+                    date: trimFixedDateString(dateElem),
+                    numPages,
                 }
             }
         })

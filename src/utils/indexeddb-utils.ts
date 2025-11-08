@@ -77,6 +77,7 @@ export async function getCurrentPage() {
     const tx = db.transaction(PAGE_STORE, 'readonly');
     const store = tx.objectStore(PAGE_STORE);
     const req = store.getAll();
+    
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });

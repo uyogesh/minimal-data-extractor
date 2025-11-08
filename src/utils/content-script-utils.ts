@@ -5,7 +5,8 @@ export const isSharehubFloorsheetPage = (url: string): boolean => {
 // 2020-01-02 -> 2020-1-2
 export const trimFixedDateString = (dateStr: string): string => {
     const [year, month, day] = dateStr.split('-');
-    return `${year}-${trimZeroes(month)}-${trimZeroes(day)}`;
+    const trimmedDate = `${year}-${trimZeroes(month)}-${trimZeroes(day)}`;
+    return trimmedDate;
 };
 
 export const trimZeroes = (numStr: string): string => {
