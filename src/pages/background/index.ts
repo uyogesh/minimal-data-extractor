@@ -10,18 +10,23 @@ export type PageMetaData = {
     tabId: number;
 }
 
-const setUpAlarm = (data: { numPages: number; date: string }, tabId?: number) => {
-    chrome.alarms.get('dataExtractionAlarm', (alarm) => {
+const setUpAlarm =  (data: { numPages: number; date: string }, tabId?: number) => {
+    chrome.alarms.get('dataExtractionAlarm', async (alarm) => {
         
         if (!alarm) {
-            saveCurrentPage({
-                id: `date-${data.date}-page-1`,
-                Size: 100,
-                page: 1,
-                total: Math.ceil(data.numPages / 10),
-                date: data.date,
-                tabId: tabId || -1,
-            } as PageMetaData)
+            const previousPage = await getCurrentPage()
+            if (previousPage && (previousPage as Array<PageMetaData>).length > 0) {
+                console.log('Resuming from previous page info:', previousPage);
+            } else {
+                saveCurrentPage({
+                    id: `date-${data.date}-page-1`,
+                    Size: 100,
+                    page: 1,
+                    total: Math.ceil(data.numPages / 10),
+                    date: data.date,
+                    tabId: tabId || -1,
+                } as PageMetaData)
+            }
             chrome.alarms.create('dataExtractionAlarm', { periodInMinutes: 0.5 });
         } else {
             console.log('Alarm already exists:', alarm);
